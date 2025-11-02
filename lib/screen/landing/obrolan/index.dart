@@ -47,6 +47,14 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
       'tipepesan': 'korup',
       'belumDibaca': true,
     },
+    {
+      'id': '5',
+      'nama': 'Atmin UPN',
+      'pesanTerakhir': 'Bapak diminta menghadap Sekarang',
+      'waktu': '02.14',
+      'tipepesan': 'teks',
+      'belumDibaca': true,
+    },
   ];
 
   @override
