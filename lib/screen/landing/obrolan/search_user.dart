@@ -19,7 +19,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     {
       'id': '5',
       'nama': 'Rina Kartika',
-      'username': '@rina_kartika',
       'email': 'rina.kartika@email.com',
       'status': 'Online',
       'isOnline': true,
@@ -27,7 +26,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     {
       'id': '6',
       'nama': 'Doni Prasetyo',
-      'username': '@doni_prasetyo',
       'email': 'doni.prasetyo@email.com',
       'status': 'Terakhir dilihat 5 menit lalu',
       'isOnline': false,
@@ -35,7 +33,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     {
       'id': '7',
       'nama': 'Maya Sari',
-      'username': '@maya_sari',
       'email': 'maya.sari@email.com',
       'status': 'Online',
       'isOnline': true,
@@ -43,7 +40,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     {
       'id': '8',
       'nama': 'Rahmat Hidayat',
-      'username': '@rahmat_hidayat',
       'email': 'rahmat.hidayat@email.com',
       'status': 'Terakhir dilihat 1 jam lalu',
       'isOnline': false,
@@ -51,7 +47,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     {
       'id': '9',
       'nama': 'Fitri Anggraini',
-      'username': '@fitri_anggraini',
       'email': 'fitri.anggraini@email.com',
       'status': 'Online',
       'isOnline': true,
@@ -86,9 +81,6 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                   return user['nama'].toLowerCase().contains(
                         query.toLowerCase(),
                       ) ||
-                      user['username'].toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
                       user['email'].toLowerCase().contains(query.toLowerCase());
                 }).toList();
           }
@@ -110,7 +102,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       extra: {
         'id': user['id'],
         'nama': user['nama'],
-        'username': user['username'],
+        'email': user['email'],
         'status': user['status'],
         'isNewChat': true,
       },
@@ -159,7 +151,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               autofocus: true,
               style: const TextStyle(color: Color(0xFF002C4B), fontSize: 16),
               decoration: InputDecoration(
-                hintText: 'Cari nama, username, atau email...',
+                hintText: 'Cari nama atau email...',
                 hintStyle: TextStyle(color: Colors.grey[500]),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF095C94)),
                 suffixIcon:
@@ -233,7 +225,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Masukkan nama, username, atau email untuk mencari pengguna yang terdaftar di CryptoGuard.',
+              'Masukkan nama atau email untuk mencari pengguna yang terdaftar di CryptoGuard.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -368,7 +360,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              user['username'],
+              user['email'],
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 2),
