@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
-class PengaturanScreen extends StatelessWidget {
+class PengaturanScreen extends StatefulWidget {
   const PengaturanScreen({super.key});
 
+  @override
+  State<PengaturanScreen> createState() => _PengaturanScreenState();
+}
+
+class _PengaturanScreenState extends State<PengaturanScreen> {
   // Dummy data - nanti diganti dengan data real dari storage/database
   final String userName = "Budi Santoso";
   final String username = "@budisantoso123";
@@ -13,6 +21,9 @@ class PengaturanScreen extends StatelessWidget {
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
 -----END PUBLIC KEY-----""";
   final String appVersion = "1.0.0";
+
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _avatarImage;
 
   String getInitials(String nama) {
     List<String> namaParts = nama.split(' ');
@@ -102,16 +113,44 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: CircleAvatar(
-          radius: 30,
-          backgroundColor: const Color(0xFF095C94),
-          child: Text(
-            getInitials(userName),
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+        leading: GestureDetector(
+          onTap: () => _showAvatarOptions(context),
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: const Color(0xFF095C94),
+                backgroundImage:
+                    _avatarImage != null ? FileImage(_avatarImage!) : null,
+                child:
+                    _avatarImage == null
+                        ? Text(
+                          getInitials(userName),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        )
+                        : null,
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFDB634),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Color(0xFF002C4B),
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         title: Text(
@@ -227,39 +266,6 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
               _showAboutDialog(context);
             },
           ),
-          Divider(
-            height: 1,
-            color: Colors.grey[200],
-            indent: 16,
-            endIndent: 16,
-          ),
-          ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF095C94).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.privacy_tip_outlined,
-                color: Color(0xFF095C94),
-                size: 24,
-              ),
-            ),
-            title: const Text(
-              'Kebijakan Privasi',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF002C4B),
-              ),
-            ),
-            trailing: const Icon(Icons.chevron_right, color: Color(0xFF095C94)),
-            onTap: () {
-              _launchPrivacyPolicy();
-            },
-          ),
         ],
       ),
     );
@@ -303,6 +309,238 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
       ),
     );
   }
+
+  // === AVATAR PHOTO FUNCTIONS ===
+
+  void _showAvatarOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Pilih Foto Profil',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF002C4B),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildAvatarOption(
+                      context,
+                      icon: Icons.camera_alt,
+                      label: 'Kamera',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImageFromCamera();
+                      },
+                    ),
+                    _buildAvatarOption(
+                      context,
+                      icon: Icons.photo_library,
+                      label: 'Galeri',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImageFromGallery();
+                      },
+                    ),
+                    if (_avatarImage != null)
+                      _buildAvatarOption(
+                        context,
+                        icon: Icons.delete,
+                        label: 'Hapus',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _removeAvatar();
+                        },
+                        isDelete: true,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildAvatarOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool isDelete = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color:
+                  isDelete
+                      ? Colors.red.withOpacity(0.1)
+                      : const Color(0xFF095C94).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: isDelete ? Colors.red[700] : const Color(0xFF095C94),
+              size: 30,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDelete ? Colors.red[700] : const Color(0xFF002C4B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    try {
+      // Request camera permission
+      var cameraStatus = await Permission.camera.request();
+      if (!cameraStatus.isGranted) {
+        _showPermissionDialog('Kamera');
+        return;
+      }
+
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (image != null) {
+        setState(() {
+          _avatarImage = File(image.path);
+        });
+
+        // TODO: Upload image to server dan simpan path ke database
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto profil berhasil diperbarui')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      // Request storage permission for older Android versions
+      var storageStatus = await Permission.photos.request();
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+        if (!storageStatus.isGranted) {
+          _showPermissionDialog('Galeri');
+          return;
+        }
+      }
+
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 512,
+        maxHeight: 512,
+      );
+
+      if (image != null) {
+        setState(() {
+          _avatarImage = File(image.path);
+        });
+
+        // TODO: Upload image to server dan simpan path ke database
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto profil berhasil diperbarui')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _removeAvatar() {
+    setState(() {
+      _avatarImage = null;
+    });
+
+    // TODO: Hapus foto dari server dan database
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Foto profil dihapus')));
+  }
+
+  void _showPermissionDialog(String feature) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text(
+              'Permission Diperlukan',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF002C4B),
+              ),
+            ),
+            content: Text(
+              'Aplikasi memerlukan akses $feature untuk mengubah foto profil.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF095C94),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                child: const Text('Buka Pengaturan'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  // === EXISTING FUNCTIONS (unchanged) ===
 
   void _showPublicKeyDialog(BuildContext context) {
     showDialog(
@@ -429,17 +667,6 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
     );
   }
 
-  void _launchPrivacyPolicy() async {
-    const url =
-        'https://cryptoguard.example.com/privacy'; // Ganti dengan URL Anda
-    try {
-      await launchUrl(Uri.parse(url));
-    } catch (e) {
-      // Jika gagal buka URL, tampilkan dialog
-      // showDialog dengan konten kebijakan privasi
-    }
-  }
-
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -482,17 +709,9 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...
 
   void _performLogout(BuildContext context) {
     // TODO: Implementasi logout
-    // 1. Hapus token dari flutter_secure_storage
-    // 2. Hapus kunci privat dari secure storage
-    // 3. Clear semua data lokal
-    // 4. Navigate ke login screen
-
-    // Simulasi logout
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Berhasil keluar')));
-
-    // Navigate to login and clear stack
     context.go('/login');
   }
 }
