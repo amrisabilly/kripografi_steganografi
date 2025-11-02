@@ -1,6 +1,7 @@
 import 'package:aplikasi_dua/screen/auth/login_screen.dart';
 import 'package:aplikasi_dua/screen/auth/registrasi_screen.dart';
 import 'package:aplikasi_dua/screen/landing/obrolan/detail.dart';
+import 'package:aplikasi_dua/screen/landing/obrolan/search_user.dart';
 import 'package:aplikasi_dua/screen/landing/pengaturan/profile.dart';
 import 'package:aplikasi_dua/screen/splash/index.dart';
 import 'package:aplikasi_dua/screen/widget/app_layout.dart';
@@ -24,6 +25,10 @@ final GoRouter router = GoRouter(
         final chatData = state.extra as Map<String, dynamic>?;
         return DetailScreen(chatId: chatId, chatData: chatData);
       },
+    ),
+    GoRoute(
+      path: '/search-user',
+      builder: (context, state) => const SearchUserScreen(),
     ),
     GoRoute(
       path: '/profile',

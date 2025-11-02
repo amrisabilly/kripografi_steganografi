@@ -133,10 +133,8 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
               : _buildChatList(filteredObrolan),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to search user screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Navigasi ke halaman cari pengguna')),
-          );
+          // Navigate ke halaman search user
+          context.push('/search-user');
         },
         backgroundColor: const Color(0xFFFDB634),
         foregroundColor: const Color(0xFF002C4B),
