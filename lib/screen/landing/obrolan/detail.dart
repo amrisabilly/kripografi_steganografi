@@ -569,14 +569,15 @@ class _DetailScreenState extends State<DetailScreen> {
                     _kirimSteganografi();
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.image, color: Color(0xFF095C94)),
-                  title: const Text('Kirim Gambar (Biasa)'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _kirimGambarBiasa();
-                  },
-                ),
+                // Hapus opsi kirim gambar biasa
+                // ListTile(
+                //   leading: const Icon(Icons.image, color: Color(0xFF095C94)),
+                //   title: const Text('Kirim Gambar (Biasa)'),
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     _kirimGambarBiasa();
+                //   },
+                // ),
               ],
             ),
           ),
@@ -666,39 +667,6 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           );
         }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
-  }
-
-  void _kirimGambarBiasa() async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
-
-      if (image != null) {
-        // TODO: Implementasi enkripsi gambar di sini
-
-        setState(() {
-          messages.add({
-            'id': DateTime.now().millisecondsSinceEpoch.toString(),
-            'text': 'Gambar terenkripsi',
-            'isMe': true,
-            'time': TimeOfDay.now().format(context),
-            'type': 'image',
-            'status': 'ok',
-            'imageUrl': image.path,
-          });
-        });
-        _scrollToBottom();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gambar berhasil dikirim')),
-        );
       }
     } catch (e) {
       ScaffoldMessenger.of(
