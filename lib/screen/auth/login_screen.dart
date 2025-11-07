@@ -1,13 +1,33 @@
+import 'dart:convert';
+import 'package:aplikasi_dua/services/api_service.dart';
+import 'package:aplikasi_dua/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    bool isPasswordVisible = false;
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
+class _LoginScreenState extends State<LoginScreen> {
+  final _apiService = ApiService();
+  final _storageService = StorageService();
+  bool _isLoading = false;
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool isPasswordVisible = false;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -26,18 +46,13 @@ class LoginScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 60),
-
-                // Logo
                 const Image(
                   image: AssetImage("assets/images/logo_apl.png"),
                   width: 120,
                   height: 120,
                   fit: BoxFit.contain,
                 ),
-
                 const SizedBox(height: 30),
-
-                // App name
                 ShaderMask(
                   shaderCallback:
                       (bounds) => const LinearGradient(
@@ -53,10 +68,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
-                // Subtitle
                 const Text(
                   'Secure Login',
                   style: TextStyle(
@@ -66,10 +78,7 @@ class LoginScreen extends StatelessWidget {
                     fontWeight: FontWeight.w300,
                   ),
                 ),
-
                 const SizedBox(height: 50),
-
-                // Login Form
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -82,18 +91,18 @@ class LoginScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Email Field
+                      // Username Field
                       TextFormField(
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
-                          labelText: 'Email',
+                          labelText: 'Username',
                           labelStyle: const TextStyle(
                             color: Color(0xFFFDCF7B),
                             fontSize: 14,
                           ),
                           prefixIcon: const Icon(
-                            Icons.email_outlined,
+                            Icons.person_outline,
                             color: Color(0xFFFDB634),
                           ),
                           enabledBorder: OutlineInputBorder(
@@ -114,13 +123,12 @@ class LoginScreen extends StatelessWidget {
                           fillColor: Colors.white.withOpacity(0.05),
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
                       // Password Field
                       StatefulBuilder(
                         builder: (context, setState) {
                           return TextFormField(
+                            controller: _passwordController,
                             obscureText: !isPasswordVisible,
                             style: const TextStyle(color: Colors.white),
                             decoration: InputDecoration(
@@ -168,18 +176,49 @@ class LoginScreen extends StatelessWidget {
                           );
                         },
                       ),
-
                       const SizedBox(height: 30),
-
                       // Login Button
                       SizedBox(
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Navigate to main app after login
-                            context.go('/home');
-                          },
+                          onPressed:
+                              _isLoading
+                                  ? null
+                                  : () async {
+                                    setState(() => _isLoading = true);
+                                    try {
+                                      final response = await _apiService.login(
+                                        username: _usernameController.text,
+                                        password: _passwordController.text,
+                                      );
+
+                                      if (response.statusCode == 200) {
+                                        final token =
+                                            jsonDecode(response.body)['token'];
+                                        await _storageService.saveToken(token);
+                                        if (mounted) context.go('/home');
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Login gagal. Cek username/password.',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('Error: $e')),
+                                      );
+                                    } finally {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFDB634),
                             foregroundColor: const Color(0xFF002C4B),
@@ -188,23 +227,30 @@ class LoginScreen extends StatelessWidget {
                             ),
                             elevation: 3,
                           ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
+                          child:
+                              _isLoading
+                                  ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFF002C4B),
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'Login',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
                         ),
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                // Register Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -229,7 +275,6 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 40),
               ],
             ),

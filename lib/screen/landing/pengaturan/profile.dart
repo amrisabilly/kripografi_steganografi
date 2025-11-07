@@ -1,3 +1,4 @@
+import 'package:aplikasi_dua/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,6 +14,10 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final ImagePicker _imagePicker = ImagePicker();
+
+  // Tambahkan ApiService dan state saving
+  final ApiService _apiService = ApiService();
+  bool _isSaving = false;
 
   // Controllers untuk form editing
   final TextEditingController _nameController = TextEditingController();
@@ -339,22 +344,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _saveProfile() {
-    // TODO: Implementasi save profile ke database/API
-    setState(() {
-      userName = _nameController.text;
-      username = '@${_usernameController.text}';
-      email = _emailController.text;
-      bio = _bioController.text;
-      _isEditing = false;
-    });
+  void _saveProfile() async {
+    setState(() => _isSaving = true);
+    try {
+      // 1. Update data teks
+      await _apiService.updateProfile({
+        'display_name': _nameController.text,
+        'username': _usernameController.text,
+        'email': _emailController.text,
+        'bio': _bioController.text,
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil berhasil diperbarui'),
-        backgroundColor: Color(0xFF095C94),
-      ),
-    );
+      // 2. Jika ada gambar baru, upload
+      if (_avatarImage != null) {
+        await _apiService.updateProfilePicture(_avatarImage!);
+      }
+
+      // 3. Update state lokal
+      setState(() {
+        userName = _nameController.text;
+        username = '@${_usernameController.text}';
+        email = _emailController.text;
+        bio = _bioController.text;
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profil berhasil diperbarui'),
+          backgroundColor: Color(0xFF095C94),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isSaving = false);
+    }
   }
 
   void _showAvatarOptions(BuildContext context) {

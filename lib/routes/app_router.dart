@@ -5,7 +5,6 @@ import 'package:aplikasi_dua/screen/landing/obrolan/search_user.dart';
 import 'package:aplikasi_dua/screen/landing/pengaturan/profile.dart';
 import 'package:aplikasi_dua/screen/splash/index.dart';
 import 'package:aplikasi_dua/screen/widget/app_layout.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter router = GoRouter(
@@ -22,8 +21,21 @@ final GoRouter router = GoRouter(
       path: '/chat-detail/:chatId',
       builder: (context, state) {
         final chatId = state.pathParameters['chatId']!;
-        final chatData = state.extra as Map<String, dynamic>?;
-        return DetailScreen(chatId: chatId, chatData: chatData);
+        final extra = state.extra as Map<String, dynamic>?;
+
+        final Map<String, dynamic>? chatData = extra?['chatData'];
+        final String? recipientPublicKey = extra?['recipientPublicKey'];
+
+        if (recipientPublicKey == null) {
+          // Jika public key tidak ada, kembali ke home (atau tampilkan halaman error)
+          return const AppLayout();
+        }
+
+        return DetailScreen(
+          chatId: chatId,
+          chatData: chatData,
+          recipientPublicKey: recipientPublicKey,
+        );
       },
     ),
     GoRoute(

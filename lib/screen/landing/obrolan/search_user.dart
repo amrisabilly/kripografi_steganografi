@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:aplikasi_dua/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,44 +16,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   bool _isSearching = false;
   bool _hasSearched = false;
 
-  // Dummy data pengguna terdaftar - nanti diganti dengan API call
-  final List<Map<String, dynamic>> _allUsers = [
-    {
-      'id': '5',
-      'nama': 'Rina Kartika',
-      'email': 'rina.kartika@email.com',
-      'status': 'Online',
-      'isOnline': true,
-    },
-    {
-      'id': '6',
-      'nama': 'Doni Prasetyo',
-      'email': 'doni.prasetyo@email.com',
-      'status': 'Terakhir dilihat 5 menit lalu',
-      'isOnline': false,
-    },
-    {
-      'id': '7',
-      'nama': 'Maya Sari',
-      'email': 'maya.sari@email.com',
-      'status': 'Online',
-      'isOnline': true,
-    },
-    {
-      'id': '8',
-      'nama': 'Rahmat Hidayat',
-      'email': 'rahmat.hidayat@email.com',
-      'status': 'Terakhir dilihat 1 jam lalu',
-      'isOnline': false,
-    },
-    {
-      'id': '9',
-      'nama': 'Fitri Anggraini',
-      'email': 'fitri.anggraini@email.com',
-      'status': 'Online',
-      'isOnline': true,
-    },
-  ];
+  final ApiService _apiService = ApiService(); // Tambahkan ApiService
 
   String getInitials(String nama) {
     List<String> namaParts = nama.split(' ');
@@ -63,48 +28,52 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
         : nama.toUpperCase();
   }
 
-  void _searchUsers(String query) {
+  void _searchUsers(String query) async {
     setState(() {
       _isSearching = true;
       _hasSearched = true;
     });
 
-    // Simulasi delay API call
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    try {
+      final response = await _apiService.getUsers();
+      if (response.statusCode == 200) {
+        final users = jsonDecode(response.body)['users'] as List;
         setState(() {
-          if (query.isEmpty) {
-            _searchResults = [];
-          } else {
-            _searchResults =
-                _allUsers.where((user) {
-                  return user['nama'].toLowerCase().contains(
-                        query.toLowerCase(),
-                      ) ||
-                      user['email'].toLowerCase().contains(query.toLowerCase());
-                }).toList();
-          }
+          _searchResults =
+              users
+                  .where((user) {
+                    return user['display_name'].toLowerCase().contains(
+                          query.toLowerCase(),
+                        ) ||
+                        user['email'].toLowerCase().contains(
+                          query.toLowerCase(),
+                        );
+                  })
+                  .toList()
+                  .cast<Map<String, dynamic>>();
           _isSearching = false;
         });
       }
-    });
+    } catch (e) {
+      setState(() => _isSearching = false);
+    }
   }
 
   void _startChat(Map<String, dynamic> user) {
-    // TODO: Implementasi logika untuk memulai chat baru
-    // 1. Cek apakah chat dengan user ini sudah ada
-    // 2. Jika belum ada, buat chat baru di database
-    // 3. Navigate ke detail chat
-
-    // Untuk demo, langsung navigate ke chat detail
+    // KIRIM PUBLIC KEY PENERIMA KE DETAIL SCREEN
     context.push(
       '/chat-detail/${user['id']}',
       extra: {
-        'id': user['id'],
-        'nama': user['nama'],
-        'email': user['email'],
-        'status': user['status'],
-        'isNewChat': true,
+        'chatData': user,
+        'recipientPublicKey': user['public_key'], // <-- PENTING
       },
     );
   }
