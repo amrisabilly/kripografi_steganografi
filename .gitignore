@@ -33,6 +33,16 @@ migrate_working_dir/
 .pub/
 /build/
 
+# Generated plugin files (should not be tracked)
+**/ios/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+**/web/plugins.js
+
 # Symbolication related
 app.*.symbols
 
