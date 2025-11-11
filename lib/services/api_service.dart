@@ -62,10 +62,8 @@ class ApiService {
 
   // --- Endpoint Pengguna ---
   Future<http.Response> getUsers() async {
-    return http.get(
-      Uri.parse('$BASE_URL/users-list'),
-      headers: await _getAuthHeaders(),
-    );
+    final headers = await _getAuthHeaders();
+    return await http.get(Uri.parse('$BASE_URL/users'), headers: headers);
   }
 
   Future<http.Response> updateProfile(Map<String, String> profileData) async {
@@ -92,14 +90,16 @@ class ApiService {
   }
 
   // --- Endpoint Pesan ---
-  Future<http.Response> getMessages(String recipientId) async {
-    return http.get(
-      Uri.parse('$BASE_URL/messages/$recipientId'),
-      headers: await _getAuthHeaders(),
+  Future<http.Response> getMessages({required int userId}) async {
+    final headers = await _getAuthHeaders();
+    return await http.get(
+      Uri.parse('$BASE_URL/messages?user_id=$userId'),
+      headers: headers,
     );
   }
 
   Future<http.Response> sendMessage({
+    required String senderId,
     required String recipientId,
     required String contentType,
     required String encryptedPayload,
@@ -107,15 +107,25 @@ class ApiService {
     String? fileSize,
   }) async {
     return http.post(
-      Uri.parse('$BASE_URL/send-message'),
+      Uri.parse('$BASE_URL/messages'),
       headers: await _getAuthHeaders(),
       body: jsonEncode({
+        'sender_id': senderId,
         'recipient_id': recipientId,
         'content_type': contentType,
         'encrypted_payload': encryptedPayload,
         'file_name': fileName,
         'file_size': fileSize,
       }),
+    );
+  }
+
+  Future<http.Response> getChats({required int userId}) async {
+    final headers = await _getAuthHeaders();
+    // Ganti endpoint sesuai backend Anda, misal pakai /messages?user_id=...
+    return await http.get(
+      Uri.parse('$BASE_URL/messages?user_id=$userId'),
+      headers: headers,
     );
   }
 }

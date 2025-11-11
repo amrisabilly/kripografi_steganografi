@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:aplikasi_dua/services/api_service.dart';
+import 'package:aplikasi_dua/services/storage_service.dart';
+import 'dart:convert';
 
 class ObrolanScreen extends StatefulWidget {
   const ObrolanScreen({super.key});
@@ -13,54 +16,76 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
   TextEditingController searchController = TextEditingController();
   List<Map<String, dynamic>> filteredObrolan = [];
 
-  // Dummy data untuk demo - nanti diganti dengan data dari database
-  final List<Map<String, dynamic>> obrolanList = [
-    {
-      'id': '1',
-      'nama': 'Budi Santoso',
-      'pesanTerakhir': 'Anda: Oke, segera saya kirim',
-      'waktu': '10:30',
-      'tipepesan': 'teks',
-      'belumDibaca': true,
-    },
-    {
-      'id': '2',
-      'nama': 'Sari Wulandari',
-      'pesanTerakhir': '🖼️ Pesan dalam Gambar',
-      'waktu': 'Kemarin',
-      'tipepesan': 'steganografi',
-      'belumDibaca': false,
-    },
-    {
-      'id': '3',
-      'nama': 'Ahmad Rahman',
-      'pesanTerakhir': '📁 Berkas: laporan.pdf',
-      'waktu': '2 hari lalu',
-      'tipepesan': 'file',
-      'belumDibaca': false,
-    },
-    {
-      'id': '4',
-      'nama': 'Lisa Dewi',
-      'pesanTerakhir': '⚠️ Pesan tidak dapat dibaca',
-      'waktu': '3 hari lalu',
-      'tipepesan': 'korup',
-      'belumDibaca': true,
-    },
-    {
-      'id': '5',
-      'nama': 'Atmin UPN',
-      'pesanTerakhir': 'Bapak diminta menghadap Sekarang',
-      'waktu': '02.14',
-      'tipepesan': 'teks',
-      'belumDibaca': true,
-    },
-  ];
+  // Tambahkan di ObrolanScreen State
+  final ApiService _apiService = ApiService();
+  final StorageService _storageService = StorageService();
+
+  List<Map<String, dynamic>> obrolanList = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    filteredObrolan = obrolanList;
+    _loadObrolan();
+  }
+
+  Future<void> _loadObrolan() async {
+    setState(() => _isLoading = true);
+    try {
+      final userId = await _storageService.getUserId();
+      if (userId == null) throw Exception('User ID tidak ditemukan');
+
+      // Ambil semua user
+      final usersResponse = await _apiService.getUsers();
+      final users = jsonDecode(usersResponse.body) as List;
+      final userMap = {for (var u in users) u['id'].toString(): u};
+
+      // Ambil semua pesan
+      final response = await _apiService.getChats(userId: int.parse(userId));
+      final messages = jsonDecode(response.body) as List;
+
+      // Ambil pesan terakhir per lawan chat
+      final Map<String, Map<String, dynamic>> lastChats = {};
+      for (var msg in messages) {
+        String lawanId =
+            msg['sender_id'].toString() == userId
+                ? msg['recipient_id'].toString()
+                : msg['sender_id'].toString();
+        if (!lastChats.containsKey(lawanId) ||
+            (DateTime.tryParse(msg['created_at'] ?? '')?.isAfter(
+                  DateTime.tryParse(lastChats[lawanId]?['created_at'] ?? '') ??
+                      DateTime(1970),
+                ) ??
+                false)) {
+          lastChats[lawanId] = msg;
+        }
+      }
+
+      obrolanList =
+          lastChats.entries.map<Map<String, dynamic>>((entry) {
+            final user = userMap[entry.key];
+            final msg = entry.value;
+            return {
+              'id': user?['id'],
+              'display_name': user?['display_name'] ?? 'Unknown',
+              'public_key': user?['public_key'],
+              'email': user?['email'],
+              'user_data': user, // simpan user asli
+              'pesanTerakhir':
+                  msg['content_type'] == 'text'
+                      ? msg['encrypted_payload']
+                      : '[File]',
+              'waktu': msg['created_at'] ?? '',
+            };
+          }).toList();
+      filteredObrolan = obrolanList;
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memuat obrolan: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _filterObrolan(String query) {
@@ -230,7 +255,13 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: InkWell(
         onTap: () {
-          context.push('/chat-detail/${obrolan['id']}', extra: obrolan);
+          context.push(
+            '/chat-detail/${obrolan['id']}',
+            extra: {
+              'chatData': obrolan['user_data'], // user lengkap
+              'recipientPublicKey': obrolan['public_key'],
+            },
+          );
         },
         onLongPress: () {
           _showChatOptions(context, obrolan);
@@ -245,7 +276,7 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
                 radius: 24,
                 backgroundColor: const Color(0xFF095C94),
                 child: Text(
-                  getInitials(obrolan['nama']),
+                  getInitials(obrolan['display_name'] ?? ''),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -253,16 +284,14 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(width: 16),
-
               // Content (Nama dan Pesan)
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      obrolan['nama'],
+                      obrolan['display_name'] ?? '',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -271,7 +300,7 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      obrolan['pesanTerakhir'],
+                      obrolan['pesanTerakhir'] ?? '', // sesuaikan field ini
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -283,17 +312,16 @@ class _ObrolanScreenState extends State<ObrolanScreen> {
                   ],
                 ),
               ),
-
               // Waktu dan Indikator
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    obrolan['waktu'],
+                    obrolan['waktu'] ?? '', // sesuaikan field ini
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 4),
-                  if (obrolan['belumDibaca'])
+                  if (obrolan['belumDibaca'] == true)
                     Container(
                       width: 8,
                       height: 8,

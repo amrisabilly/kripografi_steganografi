@@ -150,7 +150,11 @@ class CryptoService {
     // 3. Encrypt AES key with RSA
     final rsaPublicKey = _parsePublicKeyFromPem(pemPublicKey);
     final rsaCipher = pc.PKCS1Encoding(pc.RSAEngine());
-    rsaCipher.init(true, pc.PublicKeyParameter(rsaPublicKey));
+    rsaCipher.init(
+      true,
+      pc.PublicKeyParameter<pc.RSAPublicKey>(rsaPublicKey),
+    ); // <-- perbaiki di sini
+
     final encryptedAesKey = rsaCipher.process(aesKey);
 
     // 4. Combine and encode
@@ -170,7 +174,10 @@ class CryptoService {
       // 2. Decrypt AES key with RSA
       final rsaPrivateKey = _parsePrivateKeyFromPem(pemPrivateKey);
       final rsaCipher = pc.PKCS1Encoding(pc.RSAEngine());
-      rsaCipher.init(false, pc.PrivateKeyParameter(rsaPrivateKey));
+      rsaCipher.init(
+        false,
+        pc.PrivateKeyParameter<pc.RSAPrivateKey>(rsaPrivateKey),
+      );
       final aesKey = rsaCipher.process(encryptedAesKey);
 
       // 3. Decrypt data with AES-GCM
@@ -180,7 +187,6 @@ class CryptoService {
 
       return decryptedData;
     } catch (e) {
-      // Gagal dekripsi = file/pesan korup (Kriteria 6)
       print('Dekripsi gagal (kemungkinan korup): $e');
       return null;
     }

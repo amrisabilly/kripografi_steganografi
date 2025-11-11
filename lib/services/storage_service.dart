@@ -5,6 +5,7 @@ class StorageService {
 
   final String _tokenKey = 'auth_token';
   final String _privateKey = 'private_key';
+  final String _userIdKey = 'user_id';
 
   // --- Token ---
   Future<void> saveToken(String token) async {
@@ -22,6 +23,15 @@ class StorageService {
 
   Future<String?> getPrivateKey() async {
     return await _storage.read(key: _privateKey);
+  }
+
+  // --- User ID ---
+  Future<void> saveUserId(String id) async {
+    await _storage.write(key: _userIdKey, value: id);
+  }
+
+  Future<String?> getUserId() async {
+    return await _storage.read(key: _userIdKey);
   }
 
   // --- Hapus Saat Logout ---

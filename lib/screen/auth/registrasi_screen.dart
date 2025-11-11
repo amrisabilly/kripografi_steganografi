@@ -18,7 +18,7 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
 
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
-  final _usernameController = TextEditingController(); // <-- TAMBAHAN
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -51,21 +51,21 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Registrasi berhasil! Silakan login.'),
-                backgroundColor: Colors.green),
+              content: Text('Registrasi berhasil! Silakan login.'),
+              backgroundColor: Colors.green,
+            ),
           );
           if (mounted) context.go('/login');
         } else {
           final body = jsonDecode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Registrasi gagal: ${body['message']}')),
+            SnackBar(content: Text('Registrasi gagal: ${body['message']}')),
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       } finally {
         setState(() => _isLoading = false);
       }
@@ -111,9 +111,10 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
                   ),
                   const SizedBox(height: 20),
                   ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFFFDCF7B), Color(0xFFFDB634)],
-                    ).createShader(bounds),
+                    shaderCallback:
+                        (bounds) => const LinearGradient(
+                          colors: [Color(0xFFFDCF7B), Color(0xFFFDB634)],
+                        ).createShader(bounds),
                     child: const Text(
                       'CryptoGuard',
                       style: TextStyle(
@@ -150,35 +151,49 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
                         // Nama Lengkap Field
                         TextFormField(
                           controller: _namaController,
-                          validator: (val) =>
-                              val!.isEmpty ? 'Nama tidak boleh kosong' : null,
+                          validator:
+                              (val) =>
+                                  val!.isEmpty
+                                      ? 'Nama tidak boleh kosong'
+                                      : null,
                           style: const TextStyle(color: Colors.white),
                           decoration: _buildInputDecoration(
-                              'Nama Lengkap', Icons.person_outline),
+                            'Nama Lengkap',
+                            Icons.person_outline,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
                         // Username Field (TAMBAHAN)
                         TextFormField(
                           controller: _usernameController,
-                          validator: (val) => val!.isEmpty
-                              ? 'Username tidak boleh kosong'
-                              : null,
+                          validator:
+                              (val) =>
+                                  val!.isEmpty
+                                      ? 'Username tidak boleh kosong'
+                                      : null,
                           style: const TextStyle(color: Colors.white),
                           decoration: _buildInputDecoration(
-                              'Username (cth: budi123)', Icons.alternate_email),
+                            'Username (cth: budi123)',
+                            Icons.alternate_email,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
                         // Email Field
                         TextFormField(
                           controller: _emailController,
-                          validator: (val) =>
-                              val!.isEmpty ? 'Email tidak boleh kosong' : null,
+                          validator:
+                              (val) =>
+                                  val!.isEmpty
+                                      ? 'Email tidak boleh kosong'
+                                      : null,
                           keyboardType: TextInputType.emailAddress,
                           style: const TextStyle(color: Colors.white),
                           decoration: _buildInputDecoration(
-                              'Email', Icons.email_outlined),
+                            'Email',
+                            Icons.email_outlined,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -187,14 +202,17 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
                           builder: (context, setState) {
                             return TextFormField(
                               controller: _passwordController,
-                              validator: (val) => val!.length < 6
-                                  ? 'Password minimal 6 karakter'
-                                  : null,
+                              validator:
+                                  (val) =>
+                                      val!.length < 6
+                                          ? 'Password minimal 6 karakter'
+                                          : null,
                               obscureText: !isPasswordVisible,
                               style: const TextStyle(color: Colors.white),
-                              decoration:
-                                  _buildInputDecoration('Password', Icons.lock_outline)
-                                      .copyWith(
+                              decoration: _buildInputDecoration(
+                                'Password',
+                                Icons.lock_outline,
+                              ).copyWith(
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     isPasswordVisible
@@ -228,18 +246,19 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
                               ),
                               elevation: 3,
                             ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Color(0xFF002C4B),
-                                  )
-                                : const Text(
-                                    'Daftar',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
+                            child:
+                                _isLoading
+                                    ? const CircularProgressIndicator(
+                                      color: Color(0xFF002C4B),
+                                    )
+                                    : const Text(
+                                      'Daftar',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                      ),
                                     ),
-                                  ),
                           ),
                         ),
                       ],
@@ -251,7 +270,10 @@ class _RegistrasiScreenState extends State<RegistrasiScreen> {
                     children: [
                       const Text(
                         "Sudah punya akun? ",
-                        style: TextStyle(color: Color(0xFFFDCF7B), fontSize: 14),
+                        style: TextStyle(
+                          color: Color(0xFFFDCF7B),
+                          fontSize: 14,
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => context.go('/login'),

@@ -14,7 +14,6 @@ class PengaturanScreen extends StatefulWidget {
 }
 
 class _PengaturanScreenState extends State<PengaturanScreen> {
-  // Dummy data - nanti diganti dengan data real dari storage/database
   final String userName = "Budi Santoso";
   final String username = "@budisantoso123";
   final String publicKey = """-----BEGIN PUBLIC KEY-----

@@ -1,1 +1,1 @@
-const String BASE_URL = 'http://10.85.253.101:8000/api/kriptografi';
+const String BASE_URL = 'https://monitoringweb.decoratics.id/api/kriptografi';

@@ -194,9 +194,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                       );
 
                                       if (response.statusCode == 200) {
-                                        final token =
-                                            jsonDecode(response.body)['token'];
+                                        final data = jsonDecode(response.body);
+                                        final user = data['user'];
+                                        final token = data['token'];
+                                        final privateKeyString =
+                                            data['private_key']; // Ini akan null
+                                        if (privateKeyString != null) {
+                                          await _storageService.savePrivateKey(
+                                            privateKeyString,
+                                          );
+                                        }
                                         await _storageService.saveToken(token);
+                                        await _storageService.saveUserId(
+                                          user['id'].toString(),
+                                        ); // <-- Tambahkan baris ini
                                         if (mounted) context.go('/home');
                                       } else {
                                         ScaffoldMessenger.of(

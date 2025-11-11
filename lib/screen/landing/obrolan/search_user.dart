@@ -16,7 +16,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
   bool _isSearching = false;
   bool _hasSearched = false;
 
-  final ApiService _apiService = ApiService(); // Tambahkan ApiService
+  final ApiService _apiService = ApiService();
 
   String getInitials(String nama) {
     List<String> namaParts = nama.split(' ');
@@ -45,18 +45,19 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
     try {
       final response = await _apiService.getUsers();
       if (response.statusCode == 200) {
-        final users = jsonDecode(response.body)['users'] as List;
+        final users = jsonDecode(response.body) as List;
         setState(() {
           _searchResults =
               users
-                  .where((user) {
-                    return user['display_name'].toLowerCase().contains(
+                  .where(
+                    (user) =>
+                        user['display_name'].toLowerCase().contains(
                           query.toLowerCase(),
                         ) ||
                         user['email'].toLowerCase().contains(
                           query.toLowerCase(),
-                        );
-                  })
+                        ),
+                  )
                   .toList()
                   .cast<Map<String, dynamic>>();
           _isSearching = false;
@@ -286,38 +287,20 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: Stack(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFF095C94),
-              child: Text(
-                getInitials(user['nama']),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: const Color(0xFF095C94),
+          child: Text(
+            getInitials(user['display_name'] ?? ''),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
-            if (user['isOnline'])
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
         title: Text(
-          user['nama'],
+          user['display_name'] ?? '',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -329,17 +312,18 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              user['email'],
+              user['email'] ?? '',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
-            const SizedBox(height: 2),
-            Text(
-              user['status'],
-              style: TextStyle(
-                fontSize: 12,
-                color: user['isOnline'] ? Colors.green : Colors.grey[500],
+            // Jika ingin menampilkan bio:
+            if ((user['bio'] ?? '').toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  user['bio'],
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                ),
               ),
-            ),
           ],
         ),
         trailing: Container(
